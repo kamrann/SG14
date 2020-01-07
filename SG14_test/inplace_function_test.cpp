@@ -633,6 +633,8 @@ namespace sg14_test
     extern stdext::inplace_function<int()> shlib_copy_get_callable_function(int);
 }
 
+#include <iostream>
+
 static void test_shared_library_use()
 {
 	constexpr int test_value = 42;
@@ -662,6 +664,8 @@ static void test_shared_library_use()
     auto const sh_fn_copy = sg14_test::shlib_copy_get_callable_function(test_value);
     EXPECT_TRUE(sh_fn_copy);
     EXPECT_EQ(sh_fn_copy(), test_value);
+
+	std::cout << "test_shared_library_use() done" << std::endl;
 }
 
 void sg14_test::inplace_function_test()
