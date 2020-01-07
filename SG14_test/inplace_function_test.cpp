@@ -621,6 +621,49 @@ static void test_overloading_on_return_type()
     EXPECT_EQ(overloaded_function3([](int) { return nullptr; }), 2);
 }
 
+namespace sg14_test
+{
+    extern bool shlib_ref_isempty(stdext::inplace_function<int()> const&);
+	extern bool shlib_copy_isempty(stdext::inplace_function<int()>);
+    extern int shlib_ref_invoke(stdext::inplace_function<int()> const&);
+    extern int shlib_copy_invoke(stdext::inplace_function<int()>);
+    extern stdext::inplace_function<int()> const& shlib_ref_get_empty_function();
+    extern stdext::inplace_function<int()> shlib_copy_get_empty_function();
+    extern stdext::inplace_function<int()> const& shlib_ref_get_callable_function(int);
+    extern stdext::inplace_function<int()> shlib_copy_get_callable_function(int);
+}
+
+static void test_shared_library_use()
+{
+	constexpr int test_value = 42;
+
+	stdext::inplace_function<int()> const empty_func;
+    stdext::inplace_function<int()> const set_func = [test_value] { return test_value; };
+
+	EXPECT_TRUE(sg14_test::shlib_ref_isempty(empty_func));
+    EXPECT_TRUE(sg14_test::shlib_copy_isempty(empty_func));
+
+    EXPECT_FALSE(sg14_test::shlib_ref_isempty(set_func));
+    EXPECT_FALSE(sg14_test::shlib_copy_isempty(set_func));
+
+	EXPECT_EQ(sg14_test::shlib_ref_invoke(set_func), test_value);
+    EXPECT_EQ(sg14_test::shlib_copy_invoke(set_func), test_value);
+
+    auto const& sh_empty_fn_ref = sg14_test::shlib_ref_get_empty_function();
+    EXPECT_FALSE(sh_empty_fn_ref);
+
+    auto const sh_empty_fn_copy = sg14_test::shlib_copy_get_empty_function();
+    EXPECT_FALSE(sh_empty_fn_copy);
+
+	auto const& sh_fn_ref = sg14_test::shlib_ref_get_callable_function(test_value);
+	EXPECT_TRUE(sh_fn_ref);
+	EXPECT_EQ(sh_fn_ref(), test_value);
+
+    auto const sh_fn_copy = sg14_test::shlib_copy_get_callable_function(test_value);
+    EXPECT_TRUE(sh_fn_copy);
+    EXPECT_EQ(sh_fn_copy(), test_value);
+}
+
 void sg14_test::inplace_function_test()
 {
     // first set of tests (from Optiver)
@@ -713,6 +756,8 @@ void sg14_test::inplace_function_test()
     test_overloading_on_arity();
     test_overloading_on_parameter_type();
     test_overloading_on_return_type();
+
+	test_shared_library_use();
 }
 
 #ifdef TEST_MAIN

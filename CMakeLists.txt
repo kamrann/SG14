@@ -52,9 +52,24 @@ set(TEST_SOURCE_FILES
     ${SG14_TEST_SOURCE_DIRECTORY}/unstable_remove_test.cpp
 )
 
+set(TEST_EXT_LIB_FILES
+	${SG14_TEST_SOURCE_DIRECTORY}/shared_lib/inplace_function_sharedlib_test.cpp
+)
+
+set(TEST_EXT_LIB_NAME ${PROJECT_NAME}_tests_shlib)
+add_library(${TEST_EXT_LIB_NAME} SHARED ${TEST_EXT_LIB_FILES})
+target_link_libraries(${TEST_EXT_LIB_NAME} ${PROJECT_NAME})
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+	target_compile_definitions(${TEST_EXT_LIB_NAME} PRIVATE "SG14_TEST_API=__declspec(dllexport)")
+	target_compile_definitions(${TEST_EXT_LIB_NAME} INTERFACE "SG14_TEST_API=")
+else()
+	target_compile_definitions(${TEST_EXT_LIB_NAME} PUBLIC "SG14_TEST_API=")
+endif()
+
 set(TEST_NAME ${PROJECT_NAME}_tests)
 add_executable(${TEST_NAME} ${TEST_SOURCE_FILES})
-target_link_libraries(${TEST_NAME} ${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(${TEST_NAME} ${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} ${TEST_EXT_LIB_NAME})
 target_include_directories(${TEST_NAME} PRIVATE "${SG14_TEST_SOURCE_DIRECTORY}")
 
 # Compile options
